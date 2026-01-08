@@ -1,0 +1,84 @@
+import os
+import tkinter as tk
+from tkinter import filedialog, messagebox
+from PIL import Image
+
+def convert_images():
+    # 1. Get source and destination directories
+    source_dir = entry_source.get()
+    dest_dir = entry_dest.get()
+
+    if not source_dir or not dest_dir:
+        messagebox.showwarning("Warning", "Please select both source and destination folders.")
+        return
+
+    # 2. Ensure destination folder exists
+    if not os.path.exists(dest_dir):
+        os.makedirs(dest_dir)
+
+    # 3. Process images
+    supported_extensions = ('.jpg', '.jpeg', '.bmp', '.gif', '.webp', '.tiff')
+    converted_count = 0
+    
+    try:
+        for filename in os.listdir(source_dir):
+            if filename.lower().endswith(supported_extensions):
+                # Open image
+                img_path = os.path.join(source_dir, filename)
+                with Image.open(img_path) as img:
+                # Convert to RGB if necessary (e.g., for JPEG to PNG)
+                    if img.mode in ("RGBA", "P"):
+                        img = img.convert("RGBA")
+                    else:
+                        img = img.convert("RGB")
+                    
+                # Prepare new filename
+                base_name = os.path.splitext(filename)[0]
+                save_path = os.path.join(dest_dir, f"{base_name}.png")
+                    
+                # Save as PNG
+                img.save(save_path, "PNG")
+                converted_count += 1
+        
+        messagebox.showinfo("Success", f"Successfully converted {converted_count} images to PNG!")
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred: {str(e)}")
+
+def browse_source():
+    folder = filedialog.askdirectory()
+    if folder:
+        entry_source.delete(0, tk.END)
+        entry_source.insert(0, folder)
+
+def browse_dest():
+    folder = filedialog.askdirectory()
+    if folder:
+        entry_dest.delete(0, tk.END)
+        entry_dest.insert(0, folder)
+
+# --- GUI Setup ---
+root = tk.Tk()
+root.title("Image to PNG Converter (2026)")
+root.geometry("500x250")
+
+# Source Folder UI
+tk.Label(root, text="Select Source Folder:").pack(pady=(20, 0))
+frame_source = tk.Frame(root)
+frame_source.pack(pady=5)
+entry_source = tk.Entry(frame_source, width=50)
+entry_source.pack(side=tk.LEFT, padx=5)
+tk.Button(frame_source, text="Browse", command=browse_source).pack(side=tk.LEFT)
+
+# Destination Folder UI
+tk.Label(root, text="Select Destination Folder:").pack(pady=(10, 0))
+frame_dest = tk.Frame(root)
+frame_dest.pack(pady=5)
+entry_dest = tk.Entry(frame_dest, width=50)
+entry_dest.pack(side=tk.LEFT, padx=5)
+tk.Button(frame_dest, text="Browse", command=browse_dest).pack(side=tk.LEFT)
+
+# Convert Button
+tk.Button(root, text="Convert All to PNG", command=convert_images, 
+          bg="green", fg="white", font=('Arial', 10, 'bold'), padx=20).pack(pady=20)
+
+root.mainloop()
