@@ -1,0 +1,49 @@
+import streamlit as st
+from pypdf import PdfWriter
+from io import BytesIO
+
+# App Title
+st.title("PDF Merger (2026)")
+st.write("Upload exactly two PDF files to merge them.")
+
+# 1. File Uploaders
+file1 = st.file_uploader("Select first PDF", type="pdf", key="pdf1")
+file2 = st.file_uploader("Select second PDF", type="pdf", key="pdf2")
+
+# 2. Input for New Filename
+new_filename = st.text_input("Enter name for the new PDF file:", value="merged_document.pdf")
+
+# Ensure the filename ends with .pdf
+if not new_filename.lower().endswith(".pdf"):
+    new_filename += ".pdf"
+
+# 3. Merge Logic
+if st.button("Merge PDFs"):
+    if file1 and file2:
+        try:
+            # Create a PdfWriter object (the current recommended way to merge)
+            merger = PdfWriter()
+            
+            # Append the two uploaded files
+            merger.append(file1)
+            merger.append(file2)
+            
+            # Save the merged PDF into a memory buffer (BytesIO)
+            output_buffer = BytesIO()
+            merger.write(output_buffer)
+            output_buffer.seek(0)
+            
+            # 4. Provide Download Button
+            st.success("Successfully merged!")
+            st.download_button(
+                label="Download Merged PDF",
+                data=output_buffer,
+                file_name=new_filename,
+                mime="application/pdf"
+            )
+            merger.close()
+            
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
+    else:
+        st.warning("Please upload both PDF files first.")
